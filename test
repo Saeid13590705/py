@@ -1,0 +1,73 @@
+# Example 1 - Hello World
+print("Hello World")
+
+# Example 2 - Variables
+hero = "Spider-Man"
+print(hero)
+player_name = "Super-coder"
+print(player_name)
+score = 0
+print(score)
+score = 100
+print(score)
+
+# Example 3 - Input and Strings
+name = input("اسمت چیه؟ ")
+print("سلام، " + name + "!")
+first_name = input("اسمت چیه؟ ")
+last_name = input("فامیلت چیه؟ ")
+full_name = first_name + " " + last_name
+print("سلام، " + full_name + "!")
+
+# Example 4 - Operators
+kills = 5
+points_per_kill = 20
+total_score = kills * points_per_kill
+print(total_score)
+result = 10 + 5 * 2
+print(result)
+result_with_parentheses = (10 + 5) * 2
+print(result_with_parentheses)
+
+# Example 5 - Lists
+shopping_list = ["apple", "banana", "milk"]
+print(shopping_list)
+last_item = shopping_list[-1]
+print(last_item)
+
+# Example 6 - Dictionary
+character = {"name": "Ali", "age": 15, "power": "coding"}
+print(character["name"])
+
+# Example 7 - Loops
+details = {"name": "Sara", "age": 14, "grade": "A"}
+for key, value in details.items():
+    print(key, ":", value)
+
+# Example 8 - Functions
+def greet(name):
+    return "سلام " + name
+print(greet("امیر"))
+
+# Example 9 - Conditions
+age = 14
+if age >= 18:
+    print("بزرگسال")
+else:
+    print("نوجوان")
+
+# Example 10 - While Loop
+count = 0
+while count < 3:
+    print("شماره:", count)
+    count += 1
+
+# Example 11 - Class
+class Hero:
+    def __init__(self, name, power):
+        self.name = name
+        self.power = power
+    def introduce(self):
+        print("من " + self.name + " هستم و توانایی من " + self.power + " است.")
+ironman = Hero("Iron Man", "زره آهنی")
+ironman.introduce()
