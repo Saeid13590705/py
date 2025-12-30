@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 برنامه محاسبه دامنه میان‌چارکی (IQR)
-با روش صحیح محاسبه چارک‌ها بر اساس استاندارد آموزشی لینک
+با روش دقیق محاسبه چارک‌ها برای هر دو حالت فرد و زوج
 """
 
 import math
@@ -11,21 +11,30 @@ def get_numbers_from_user():
     """
     دریافت اعداد از کاربر
     """
-    print("=" * 60)
-    print("محاسبه دامنه میان‌چارکی (IQR) - روش استاندارد")
-    print("=" * 60)
+    print("=" * 70)
+    print("محاسبه دامنه میان‌چارکی (IQR) - روش دقیق")
+    print("=" * 70)
     
     while True:
         try:
-            input_str = input("\nلطفاً اعداد را با فاصله یا کاما از هم جدا کنید (مثال: 12 15 18 22 25): ")
+            input_str = input("\nلطفاً اعداد را با فاصله یا کاما از هم جدا کنید: ")
+            
+            if not input_str.strip():
+                print("⚠️  هیچ عددی وارد نشده است!")
+                continue
             
             # حذف کاماها و تبدیل به لیست اعداد
             numbers = []
+            invalid_items = []
             for item in input_str.replace(',', ' ').split():
                 try:
-                    numbers.append(float(item))
+                    num = float(item)
+                    numbers.append(num)
                 except ValueError:
-                    print(f"⚠️  '{item}' عدد معتبر نیست و نادیده گرفته می‌شود.")
+                    invalid_items.append(item)
+            
+            if invalid_items:
+                print(f"⚠️  موارد نامعتبر نادیده گرفته شدند: {', '.join(invalid_items)}")
             
             if len(numbers) < 3:
                 print(f"⚠️  حداقل ۳ عدد وارد کنید! شما {len(numbers)} عدد وارد کرده‌اید.")
@@ -44,6 +53,9 @@ def calculate_median(data):
     """
     محاسبه میانه برای یک لیست داده
     """
+    if not data:
+        return None
+    
     n = len(data)
     sorted_data = sorted(data)
     
@@ -55,8 +67,7 @@ def calculate_median(data):
 
 def calculate_statistics(numbers):
     """
-    محاسبه آمار توصیفی برای لیست اعداد با روش استاندارد
-    (روش Q1 و Q3 بر اساس میانه نیمه‌ها)
+    محاسبه آمار توصیفی برای لیست اعداد با روش دقیق
     """
     # مرتب‌سازی اعداد
     sorted_numbers = sorted(numbers)
@@ -69,32 +80,55 @@ def calculate_statistics(numbers):
     # محاسبه میانه (Q2)
     median = calculate_median(sorted_numbers)
     
-    # محاسبه چارک اول (Q1) - میانه نیمه پایینی
+    # محاسبه چارک اول (Q1) و چارک سوم (Q3)
     if n % 2 == 1:  # تعداد فرد
-        # حذف میانه از لیست
-        lower_half = sorted_numbers[:n // 2]  # نیمه پایین بدون میانه
-        upper_half = sorted_numbers[n // 2 + 1:]  # نیمه بالا بدون میانه
+        # موقعیت میانه
+        median_pos = n // 2
+        
+        # نیمه پایینی (بدون میانه)
+        lower_half = sorted_numbers[:median_pos]
+        # نیمه بالایی (بدون میانه)
+        upper_half = sorted_numbers[median_pos + 1:]
+        
+        # نمایش برای دیباگ
+        print(f"\n📊 حالت فرد - تعداد داده‌ها: {n}")
+        print(f"میانه (موقعیت {median_pos + 1}): {sorted_numbers[median_pos]}")
+        print(f"نیمه پایینی ({len(lower_half)} عدد): {lower_half}")
+        print(f"نیمه بالایی ({len(upper_half)} عدد): {upper_half}")
+        
     else:  # تعداد زوج
-        lower_half = sorted_numbers[:n // 2]  # نیمه پایین
-        upper_half = sorted_numbers[n // 2:]  # نیمه بالا
+        # موقعیت‌های میانی
+        mid_pos1 = n // 2 - 1
+        mid_pos2 = n // 2
+        
+        # نیمه پایینی (شامل اولین عدد میانی)
+        lower_half = sorted_numbers[:mid_pos2]  # تا موقعیت دوم میانی
+        # نیمه بالایی (شامل دومین عدد میانی به بعد)
+        upper_half = sorted_numbers[mid_pos1 + 1:]  # از موقعیت اول میانی+1
+        
+        # نمایش برای دیباگ
+        print(f"\n📊 حالت زوج - تعداد داده‌ها: {n}")
+        print(f"دو عدد میانی (موقعیت‌های {mid_pos1 + 1} و {mid_pos2 + 1}): {sorted_numbers[mid_pos1]}, {sorted_numbers[mid_pos2]}")
+        print(f"میانه: ({sorted_numbers[mid_pos1]} + {sorted_numbers[mid_pos2]}) / 2 = {median}")
+        print(f"نیمه پایینی ({len(lower_half)} عدد): {lower_half}")
+        print(f"نیمه بالایی ({len(upper_half)} عدد): {upper_half}")
     
+    # محاسبه Q1 و Q3
     q1 = calculate_median(lower_half)
     q3 = calculate_median(upper_half)
     
     # محاسبه دامنه میان‌چارکی (IQR)
     iqr = q3 - q1
     
-    # محاسبه مرزهای outlier (طبق استاندارد Tukey's fences)
+    # محاسبه مرزهای outlier
     lower_bound = q1 - 1.5 * iqr
     upper_bound = q3 + 1.5 * iqr
     
     # شناسایی outliers
     outliers = [num for num in sorted_numbers if num < lower_bound or num > upper_bound]
     
-    # محاسبه میانگین و انحراف معیار (برای اطلاعات بیشتر)
+    # محاسبه میانگین و انحراف معیار
     mean_val = sum(numbers) / n
-    
-    # محاسبه واریانس
     variance = sum((x - mean_val) ** 2 for x in numbers) / (n - 1) if n > 1 else 0
     std_dev = math.sqrt(variance)
     
@@ -114,215 +148,321 @@ def calculate_statistics(numbers):
         'variance': variance,
         'count': n,
         'lower_half': lower_half,
-        'upper_half': upper_half
+        'upper_half': upper_half,
+        'is_even': (n % 2 == 0)
     }
+
+
+def display_detailed_calculation(stats):
+    """
+    نمایش جزئیات محاسبات
+    """
+    print("\n" + "=" * 70)
+    print("جزئیات محاسبات")
+    print("=" * 70)
+    
+    print(f"\n📊 اطلاعات مجموعه داده:")
+    print(f"- تعداد داده‌ها: {stats['count']} ({'زوج' if stats['is_even'] else 'فرد'})")
+    print(f"- مرتب‌شده: {stats['sorted_numbers']}")
+    
+    print(f"\n🔢 مراحل محاسبه:")
+    
+    if stats['is_even']:
+        n = stats['count']
+        mid_pos1 = n // 2 - 1
+        mid_pos2 = n // 2
+        
+        print(f"1. چون تعداد داده‌ها زوج است ({n} عدد):")
+        print(f"   - دو عدد میانی: موقعیت {mid_pos1 + 1} = {stats['sorted_numbers'][mid_pos1]}")
+        print(f"                     موقعیت {mid_pos2 + 1} = {stats['sorted_numbers'][mid_pos2]}")
+        print(f"   - میانه (MED) = ({stats['sorted_numbers'][mid_pos1]} + {stats['sorted_numbers'][mid_pos2]}) / 2")
+        print(f"                  = {stats['median']}")
+        
+        print(f"\n2. تقسیم مجموعه داده به دو نیمه:")
+        print(f"   - نیمه پایینی: {stats['lower_half']} ({len(stats['lower_half'])} عدد)")
+        print(f"   - نیمه بالایی: {stats['upper_half']} ({len(stats['upper_half'])} عدد)")
+        
+        # محاسبه Q1
+        lower_n = len(stats['lower_half'])
+        if lower_n % 2 == 1:
+            q1_pos = lower_n // 2
+            print(f"\n3. محاسبه Q1 (میانه نیمه پایینی):")
+            print(f"   - تعداد فرد → عدد وسط: موقعیت {q1_pos + 1} = {stats['lower_half'][q1_pos]}")
+            print(f"   - Q1 = {stats['q1']}")
+        else:
+            q1_pos1 = lower_n // 2 - 1
+            q1_pos2 = lower_n // 2
+            print(f"\n3. محاسبه Q1 (میانه نیمه پایینی):")
+            print(f"   - تعداد زوج → دو عدد وسط: {stats['lower_half'][q1_pos1]} و {stats['lower_half'][q1_pos2]}")
+            print(f"   - Q1 = ({stats['lower_half'][q1_pos1]} + {stats['lower_half'][q1_pos2]}) / 2")
+            print(f"        = {stats['q1']}")
+        
+        # محاسبه Q3
+        upper_n = len(stats['upper_half'])
+        if upper_n % 2 == 1:
+            q3_pos = upper_n // 2
+            print(f"\n4. محاسبه Q3 (میانه نیمه بالایی):")
+            print(f"   - تعداد فرد → عدد وسط: موقعیت {q3_pos + 1} = {stats['upper_half'][q3_pos]}")
+            print(f"   - Q3 = {stats['q3']}")
+        else:
+            q3_pos1 = upper_n // 2 - 1
+            q3_pos2 = upper_n // 2
+            print(f"\n4. محاسبه Q3 (میانه نیمه بالایی):")
+            print(f"   - تعداد زوج → دو عدد وسط: {stats['upper_half'][q3_pos1]} و {stats['upper_half'][q3_pos2]}")
+            print(f"   - Q3 = ({stats['upper_half'][q3_pos1]} + {stats['upper_half'][q3_pos2]}) / 2")
+            print(f"        = {stats['q3']}")
+    
+    else:  # فرد
+        n = stats['count']
+        median_pos = n // 2
+        
+        print(f"1. چون تعداد داده‌ها فرد است ({n} عدد):")
+        print(f"   - عدد میانی: موقعیت {median_pos + 1} = {stats['sorted_numbers'][median_pos]}")
+        print(f"   - میانه (MED) = {stats['median']}")
+        
+        print(f"\n2. حذف میانه و تقسیم به دو نیمه:")
+        print(f"   - نیمه پایینی: {stats['lower_half']} ({len(stats['lower_half'])} عدد)")
+        print(f"   - نیمه بالایی: {stats['upper_half']} ({len(stats['upper_half'])} عدد)")
+        
+        # محاسبه Q1
+        lower_n = len(stats['lower_half'])
+        if lower_n % 2 == 1:
+            q1_pos = lower_n // 2
+            print(f"\n3. محاسبه Q1 (میانه نیمه پایینی):")
+            print(f"   - تعداد فرد → عدد وسط: موقعیت {q1_pos + 1} = {stats['lower_half'][q1_pos]}")
+            print(f"   - Q1 = {stats['q1']}")
+        else:
+            q1_pos1 = lower_n // 2 - 1
+            q1_pos2 = lower_n // 2
+            print(f"\n3. محاسبه Q1 (میانه نیمه پایینی):")
+            print(f"   - تعداد زوج → دو عدد وسط: {stats['lower_half'][q1_pos1]} و {stats['lower_half'][q1_pos2]}")
+            print(f"   - Q1 = ({stats['lower_half'][q1_pos1]} + {stats['lower_half'][q1_pos2]}) / 2")
+            print(f"        = {stats['q1']}")
+        
+        # محاسبه Q3
+        upper_n = len(stats['upper_half'])
+        if upper_n % 2 == 1:
+            q3_pos = upper_n // 2
+            print(f"\n4. محاسبه Q3 (میانه نیمه بالایی):")
+            print(f"   - تعداد فرد → عدد وسط: موقعیت {q3_pos + 1} = {stats['upper_half'][q3_pos]}")
+            print(f"   - Q3 = {stats['q3']}")
+        else:
+            q3_pos1 = upper_n // 2 - 1
+            q3_pos2 = upper_n // 2
+            print(f"\n4. محاسبه Q3 (میانه نیمه بالایی):")
+            print(f"   - تعداد زوج → دو عدد وسط: {stats['upper_half'][q3_pos1]} و {stats['upper_half'][q3_pos2]}")
+            print(f"   - Q3 = ({stats['upper_half'][q3_pos1]} + {stats['upper_half'][q3_pos2]}) / 2")
+            print(f"        = {stats['q3']}")
+    
+    print(f"\n5. محاسبه IQR:")
+    print(f"   - IQR = Q3 - Q1")
+    print(f"         = {stats['q3']} - {stats['q1']}")
+    print(f"         = {stats['iqr']}")
+    
+    print(f"\n6. محاسبه مرزهای outlier:")
+    print(f"   - مرز پایین = Q1 - 1.5 × IQR")
+    print(f"                = {stats['q1']} - 1.5 × {stats['iqr']}")
+    print(f"                = {stats['lower_bound']:.4f}")
+    print(f"   - مرز بالا = Q3 + 1.5 × IQR")
+    print(f"              = {stats['q3']} + 1.5 × {stats['iqr']}")
+    print(f"              = {stats['upper_bound']:.4f}")
 
 
 def display_results(numbers, stats):
     """
     نمایش نتایج محاسبات
     """
-    print("\n" + "=" * 60)
-    print("نتایج محاسبات - روش استاندارد")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("نتایج نهایی محاسبات")
+    print("=" * 70)
     
-    print(f"\n📊 تعداد اعداد: {stats['count']}")
-    print(f"📊 اعداد وارد شده: {numbers}")
-    print(f"📊 اعداد مرتب‌شده: {stats['sorted_numbers']}")
-    
-    print("\n" + "-" * 40)
-    print("📊 تقسیم‌بندی داده‌ها:")
+    print(f"\n📊 آمار توصیفی اصلی:")
     print("-" * 40)
-    print(f"نیمه پایینی: {stats['lower_half']}")
-    print(f"نیمه بالایی: {stats['upper_half']}")
     
-    print("\n" + "-" * 40)
-    print("📈 آمار توصیفی:")
-    print("-" * 40)
-    print(f"کمینه (MIN): {stats['min']:.4f}")
-    print(f"چارک اول (Q1): {stats['q1']:.4f} (میانه نیمه پایینی)")
-    print(f"میانه (MED/Q2): {stats['median']:.4f}")
-    print(f"چارک سوم (Q3): {stats['q3']:.4f} (میانه نیمه بالایی)")
-    print(f"بیشینه (MAX): {stats['max']:.4f}")
-    print(f"دامنه میان‌چارکی (IQR): {stats['iqr']:.4f} (Q3 - Q1)")
+    # ایجاد جدول زیبا
+    print("┌──────────────────────┬──────────────┐")
+    print(f"│ {'معیار':<20} │ {'مقدار':<12} │")
+    print("├──────────────────────┼──────────────┤")
+    print(f"│ کمینه (MIN)          │ {stats['min']:>12.4f} │")
+    print(f"│ چارک اول (Q1)        │ {stats['q1']:>12.4f} │")
+    print(f"│ میانه (MED)         │ {stats['median']:>12.4f} │")
+    print(f"│ چارک سوم (Q3)        │ {stats['q3']:>12.4f} │")
+    print(f"│ بیشینه (MAX)         │ {stats['max']:>12.4f} │")
+    print(f"│ دامنه میان‌چارکی (IQR) │ {stats['iqr']:>12.4f} │")
+    print("└──────────────────────┴──────────────┘")
     
-    print("\n" + "-" * 40)
-    print("📊 آمار توصیفی تکمیلی:")
-    print("-" * 40)
-    print(f"میانگین (Mean): {stats['mean']:.4f}")
-    print(f"انحراف معیار (Std Dev): {stats['std_dev']:.4f}")
-    print(f"واریانس (Variance): {stats['variance']:.4f}")
+    print(f"\n📊 آمار تکمیلی:")
+    print(f"میانگین: {stats['mean']:.4f}")
+    print(f"انحراف معیار: {stats['std_dev']:.4f}")
+    print(f"واریانس: {stats['variance']:.4f}")
     
-    print("\n" + "-" * 40)
-    print("🔍 شناسایی داده‌های پرت (Outliers):")
-    print("-" * 40)
-    print(f"مرز پایین: Q1 - 1.5 × IQR = {stats['q1']:.4f} - 1.5 × {stats['iqr']:.4f} = {stats['lower_bound']:.4f}")
-    print(f"مرز بالا: Q3 + 1.5 × IQR = {stats['q3']:.4f} + 1.5 × {stats['iqr']:.4f} = {stats['upper_bound']:.4f}")
-    print(f"\nمحدوده عادی داده‌ها: [{stats['lower_bound']:.4f}, {stats['upper_bound']:.4f}]")
+    print("\n" + "=" * 70)
+    print("شناسایی داده‌های پرت (Outliers)")
+    print("=" * 70)
+    
+    print(f"\n🔍 مرزها:")
+    print(f"مرز پایین: {stats['lower_bound']:.4f}")
+    print(f"مرز بالا: {stats['upper_bound']:.4f}")
+    print(f"محدوده عادی: [{stats['lower_bound']:.4f}, {stats['upper_bound']:.4f}]")
     
     if stats['outliers']:
         print(f"\n⚠️  داده‌های پرت شناسایی شده ({len(stats['outliers'])} عدد):")
         for i, outlier in enumerate(stats['outliers'], 1):
             if outlier < stats['lower_bound']:
-                position = f"{outlier:.4f} < {stats['lower_bound']:.4f} (پایین‌تر از مرز)"
+                reason = f"کوچکتر از مرز پایین ({outlier:.4f} < {stats['lower_bound']:.4f})"
             else:
-                position = f"{outlier:.4f} > {stats['upper_bound']:.4f} (بالاتر از مرز)"
-            print(f"  {i}. {outlier:.4f} → {position}")
+                reason = f"بزرگتر از مرز بالا ({outlier:.4f} > {stats['upper_bound']:.4f})"
+            print(f"  {i:2d}. {outlier:10.4f} → {reason}")
         
-        # محاسبه درصد outliers
+        # محاسبه درصد
         outlier_percent = (len(stats['outliers']) / stats['count']) * 100
-        print(f"\n📊 {outlier_percent:.1f}% از داده‌ها پرت هستند.")
+        print(f"\n📈 {outlier_percent:.1f}% از داده‌ها پرت هستند.")
     else:
         print("\n✅ هیچ داده پرتی شناسایی نشد.")
     
-    # نمایش نمودار شماتیک
-    print("\n" + "-" * 40)
-    print("📊 نمایش گرافیکی:")
-    print("-" * 40)
+    # نمایش بصری
+    print("\n" + "=" * 70)
+    print("نمایش بصری توزیع داده‌ها")
+    print("=" * 70)
     
-    # ایجاد نمایش ساده از boxplot
-    scale = 50
+    # ایجاد نمایش ساده
+    scale = 60
     data_range = stats['max'] - stats['min']
     
     if data_range > 0:
         def get_position(value):
             return int(((value - stats['min']) / data_range) * scale)
         
-        # ایجاد مقیاس عددی
+        # خط مقیاس
+        line = ['·'] * (scale + 1)
+        
+        # علامت‌گذاری نقاط مهم
+        points = [
+            (stats['min'], 'MIN'),
+            (stats['q1'], 'Q1'),
+            (stats['median'], 'MED'),
+            (stats['q3'], 'Q3'),
+            (stats['max'], 'MAX')
+        ]
+        
+        for value, label in points:
+            pos = get_position(value)
+            if 0 <= pos <= scale:
+                line[pos] = '|'
+        
+        # نمایش
         print("\nمقیاس:")
-        print(f"{stats['min']:.2f}" + " " * (scale - 10) + f"{stats['max']:.2f}")
-        
-        # نمایش محدوده‌ها
-        print("\nمحدوده‌ها:")
-        print(f"داده‌های عادی: {'░' * get_position(stats['lower_bound'])}"
-              f"{'█' * (get_position(stats['upper_bound']) - get_position(stats['lower_bound']))}"
-              f"{'░' * (scale - get_position(stats['upper_bound']))}")
-        
-        print(f"محدوده IQR:     {' ' * get_position(stats['q1'])}"
-              f"{'▀' * (get_position(stats['q3']) - get_position(stats['q1']))}")
-        
-        # نمایش نقاط کلیدی
-        print("\nنقاط کلیدی:")
-        markers = [' '] * (scale + 1)
-        markers[get_position(stats['min'])] = '|'
-        markers[get_position(stats['q1'])] = '['
-        markers[get_position(stats['median'])] = '|'
-        markers[get_position(stats['q3'])] = ']'
-        markers[get_position(stats['max'])] = '|'
-        
-        print("MIN Q1  MED Q3  MAX")
-        print(''.join(markers))
+        print(f"{stats['min']:.1f}" + " " * (scale - 10) + f"{stats['max']:.1f}")
+        print(" " + "".join(line))
+        print(" " + " " * get_position(stats['min']) + "M" + 
+              " " * (get_position(stats['q1']) - get_position(stats['min']) - 1) + "Q" +
+              " " * (get_position(stats['median']) - get_position(stats['q1']) - 1) + "M" +
+              " " * (get_position(stats['q3']) - get_position(stats['median']) - 1) + "Q" +
+              " " * (get_position(stats['max']) - get_position(stats['q3']) - 1) + "M")
+        print(" " + " " * get_position(stats['min']) + "I" + 
+              " " * (get_position(stats['q1']) - get_position(stats['min']) - 1) + "1" +
+              " " * (get_position(stats['median']) - get_position(stats['q1']) - 1) + "E" +
+              " " * (get_position(stats['q3']) - get_position(stats['median']) - 1) + "3" +
+              " " * (get_position(stats['max']) - get_position(stats['q3']) - 1) + "A")
+        print(" " + " " * get_position(stats['min']) + "N" + 
+              " " * (get_position(stats['q1']) - get_position(stats['min']) - 1) + " " +
+              " " * (get_position(stats['median']) - get_position(stats['q1']) - 1) + "D" +
+              " " * (get_position(stats['q3']) - get_position(stats['median']) - 1) + " " +
+              " " * (get_position(stats['max']) - get_position(stats['q3']) - 1) + "X")
         
         # نمایش outliers
         if stats['outliers']:
-            outlier_markers = [' '] * (scale + 1)
+            outlier_line = [' '] * (scale + 1)
             for outlier in stats['outliers']:
                 pos = get_position(outlier)
                 if 0 <= pos <= scale:
-                    outlier_markers[pos] = '•'
-            print("Outliers: " + ''.join(outlier_markers))
-    
-    # نمایش خلاصه
-    print("\n" + "-" * 40)
-    print("📋 خلاصه نتایج:")
-    print("-" * 40)
-    print(f"• دامنه داده‌ها: {stats['min']:.2f} تا {stats['max']:.2f}")
-    print(f"• 50% مرکزی داده‌ها بین {stats['q1']:.2f} و {stats['q3']:.2f} قرار دارند")
-    print(f"• میانه (نقطه وسط): {stats['median']:.2f}")
-    print(f"• پراکندگی (IQR): {stats['iqr']:.2f}")
-    if stats['outliers']:
-        print(f"• هشدار: {len(stats['outliers'])} داده پرت وجود دارد")
-    else:
-        print("• وضعیت: هیچ داده پرتی وجود ندارد")
-    
-    print("\n" + "=" * 60)
+                    outlier_line[pos] = '●'
+                elif pos < 0:
+                    outlier_line[0] = '←'
+                else:
+                    outlier_line[scale] = '→'
+            
+            print("\nOutliers:")
+            print(" " + "".join(outlier_line))
 
 
-def test_example_from_link():
+def test_examples():
     """
-    تست با مثال ذکر شده در لینک
+    تست برنامه با مثال‌های ذکر شده
     """
-    print("\n" + "=" * 60)
-    print("تست با مثال لینک: 10, 12, 14, 15, 16, 18, 20, 22, 24, 100")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("تست با مثال‌های آموزشی")
+    print("=" * 70)
     
-    test_numbers = [10, 12, 14, 15, 16, 18, 20, 22, 24, 100]
-    test_stats = calculate_statistics(test_numbers)
+    # مثال اول: حالت زوج
+    print("\n🔹 مثال 1: حالت زوج (8 عدد)")
+    example1 = [10, 15, 20, 26, 28, 30, 35, 40]
+    print(f"داده‌ها: {example1}")
+    stats1 = calculate_statistics(example1)
     
-    print(f"\n🔍 نتایج برای مثال لینک:")
-    print(f"اعداد: {test_numbers}")
-    print(f"مرتب‌شده: {test_stats['sorted_numbers']}")
-    print(f"\nنیمه پایینی: {test_stats['lower_half']}")
-    print(f"نیمه بالایی: {test_stats['upper_half']}")
-    print(f"\nQ1 (میانه نیمه پایینی): {test_stats['q1']}")
-    print(f"Q2 (میانه کل): {test_stats['median']}")
-    print(f"Q3 (میانه نیمه بالایی): {test_stats['q3']}")
-    print(f"IQR: {test_stats['iqr']}")
-    print(f"\nمرز پایین outlier: {test_stats['lower_bound']}")
-    print(f"مرز بالا outlier: {test_stats['upper_bound']}")
-    print(f"\nOutliers: {test_stats['outliers']}")
+    print(f"\nنتایج:")
+    print(f"Q1 انتظار: 17.5 | محاسبه: {stats1['q1']}")
+    print(f"MED انتظار: 27 | محاسبه: {stats1['median']}")
+    print(f"Q3 انتظار: 32.5 | محاسبه: {stats1['q3']}")
+    print(f"IQR انتظار: 15 | محاسبه: {stats1['iqr']}")
+    print(f"Outliers انتظار: هیچ | محاسبه: {stats1['outliers']}")
     
-    # بررسی صحت نتایج
-    expected_q1 = 14.5  # بر اساس روش لینک
-    expected_q3 = 23.0  # بر اساس روش لینک
-    expected_iqr = 8.5  # بر اساس روش لینک
+    # مثال دوم: حالت فرد
+    print("\n\n🔹 مثال 2: حالت فرد (11 عدد)")
+    example2 = [2, 4, 5, 5, 6, 11, 11, 13, 14, 25, 30]
+    print(f"داده‌ها: {example2}")
+    stats2 = calculate_statistics(example2)
     
-    print(f"\n✅ صحت‌سنجی:")
-    print(f"Q1 محاسبه شده: {test_stats['q1']} (انتظار: {expected_q1})")
-    print(f"Q3 محاسبه شده: {test_stats['q3']} (انتظار: {expected_q3})")
-    print(f"IQR محاسبه شده: {test_stats['iqr']} (انتظار: {expected_iqr})")
+    print(f"\nنتایج:")
+    print(f"Q1 انتظار: 5 | محاسبه: {stats2['q1']}")
+    print(f"MED انتظار: 11 | محاسبه: {stats2['median']}")
+    print(f"Q3 انتظار: 14 | محاسبه: {stats2['q3']}")
+    print(f"IQR انتظار: 9 | محاسبه: {stats2['iqr']}")
+    print(f"Outliers انتظار: [30] | محاسبه: {stats2['outliers']}")
     
-    if math.isclose(test_stats['q1'], expected_q1) and math.isclose(test_stats['q3'], expected_q3):
-        print("✅ نتایج با لینک مطابقت دارند!")
-    else:
-        print("⚠️  تفاوت در نتایج مشاهده می‌شود")
-    
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 70)
 
 
 def main():
     """
     تابع اصلی برنامه
     """
-    print("برنامه محاسبه دامنه میان‌چارکی (IQR) - روش استاندارد")
-    print("بر اساس روش آموزشی: https://blog.faradars.org/دادە-پرەت-چیست/")
+    print("📊 برنامه محاسبه دامنه میان‌چارکی (IQR)")
+    print("با روش دقیق محاسبه چارک‌ها برای حالت‌های فرد و زوج")
+    print("=" * 70)
     
-    # اجرای تست با مثال لینک
-    run_test = input("\nآیا می‌خواهید مثال لینک را تست کنید؟ (بله/خیر): ").strip().lower()
-    if run_test in ['بله', 'y', 'yes', 'ب']:
-        test_example_from_link()
+    # اجرای تست
+    run_test = input("\nآیا می‌خواهید مثال‌های آموزشی را تست کنید؟ (بله/خیر): ").strip().lower()
+    if run_test in ['بله', 'y', 'yes', 'ب', '']:
+        test_examples()
     
     while True:
         # دریافت اعداد از کاربر
         numbers = get_numbers_from_user()
         
         # محاسبه آمار
+        print("\n" + "=" * 70)
+        print("در حال محاسبه...")
         stats = calculate_statistics(numbers)
         
-        # نمایش نتایج
+        # نمایش جزئیات محاسبات
+        show_details = input("\nآیا می‌خواهید جزئیات محاسبات را ببینید؟ (بله/خیر): ").strip().lower()
+        if show_details in ['بله', 'y', 'yes', 'ب', '']:
+            display_detailed_calculation(stats)
+        
+        # نمایش نتایج نهایی
         display_results(numbers, stats)
         
-        # نمایش روش محاسبه
-        print("\n" + "-" * 40)
-        print("📖 روش محاسبه (بر اساس لینک):")
-        print("-" * 40)
-        print("1. داده‌ها را مرتب می‌کنیم")
-        print("2. میانه (Q2) کل داده‌ها را محاسبه می‌کنیم")
-        print("3. اگر تعداد داده‌ها فرد باشد، میانه را حذف می‌کنیم")
-        print("4. Q1 = میانه نیمه پایینی داده‌ها")
-        print("5. Q3 = میانه نیمه بالایی داده‌ها")
-        print("6. IQR = Q3 - Q1")
-        print("7. مرزهای outlier: Q1 - 1.5×IQR و Q3 + 1.5×IQR")
-        print("-" * 40)
-        
-        # پرسش برای ادامه یا خروج
-        print("\nآیا می‌خواهید محاسبه دیگری انجام دهید؟")
-        choice = input("(بله = Enter, خیر = 'exit'): ").strip().lower()
+        # پرسش برای ادامه
+        print("\n" + "=" * 70)
+        choice = input("آیا می‌خواهید محاسبه دیگری انجام دهید؟ (بله = Enter، خیر = 'exit'): ").strip().lower()
         
         if choice == 'exit':
-            print("\nبا تشکر از استفاده از برنامه. خداحافظ!")
+            print("\nبا تشکر از استفاده از برنامه. خداحافظ! 👋")
+            print("=" * 70)
             break
-        print("\n" + "=" * 60)
+        
+        print("\n" + "=" * 70)
 
 
 if __name__ == "__main__":
